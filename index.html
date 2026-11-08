@@ -130,7 +130,16 @@ body.g3 .gv .pc.dead::before{content:'dead';position:absolute;inset:0;display:fl
 .qopt b{background:#0005;border-radius:8px;padding:0 9px}.qopt:active{transform:translateY(3px)}.qopt.ok,.qopt.sel{outline:4px solid #fff}.qopt.no{outline:4px solid #000}.qopt.dim{opacity:.35}
 .cpl{display:flex;flex-direction:column;gap:4px;margin-top:6px}.cpl div{display:flex;justify-content:space-between;background:#0006;border-radius:10px;padding:5px 10px;font-size:1rem;text-align:left}.cpl .me{outline:2px solid #fde047}
 .cw .btn,.co .btn{width:100%}
-body.sp #cwg,body.sp>div[style*="left:8px"][style*="top:50%"]{display:none!important}
+body.sp #cwg,body.sp #thw{display:none!important}
+body.ctl:not(.c3) #a3d{display:none}
+body.c3{overflow:hidden;touch-action:none}
+body.ctl #cwg,body.ctl #thw{display:none!important}
+.cwrap.c3w{height:100dvh;min-height:0;padding:6px;gap:6px}
+.cstage{margin-top:auto;background:#1e1b4bee;border:3px solid #fff3;border-radius:20px;padding:10px;max-height:58vh;overflow:auto;touch-action:pan-y;text-align:center}
+.cstage .cw,.cstage .cq{margin:0}.cstage .co{grid-template-columns:1fr 1fr;gap:8px}.cstage .co.co1{grid-template-columns:1fr}
+.cstage .qopt{font-size:1.05rem;padding:12px 10px}.cstage .qq{font-size:1.2rem;margin:0 0 4px}.cstage .qi{max-height:16vh}
+.cstage .msg{font-size:1.2rem}.cstage h2,.cstage h3{margin:4px 0}.cstage p{margin:4px 0}
+.c3w .ch{background:#1e1b4bcc;backdrop-filter:blur(4px)}
 </style></head><body>
 <div class="bg"><span style="left:5%;animation-delay:0s">⚔️</span><span style="left:25%;animation-delay:3s">🛡️</span><span style="left:45%;animation-delay:6s">⭐</span><span style="left:65%;animation-delay:2s">🧠</span><span style="left:85%;animation-delay:8s">🚀</span></div>
 <div id="app"></div>
@@ -315,11 +324,12 @@ else if(m.t=='act'&&G.ph=='act'&&(m.k=='a'||m.k=='d'||(m.k=='k'&&S.gm=='kejutan'
 else if(m.t=='tgt'&&G.ph=='tgt'){const x=G.ps[m.i];if(x&&m.i!==i&&x.l>0)atk(m.i)}
 else if(m.t=='spin'&&G.ph=='spin'&&G.sp&&!G.sp.run&&!G.sp.done)spinGo()}
 /* kirim status game ke tiap HP siswa (dipanggil dari R()) */
-function netPush(){if(!LB.players.length)return;const g=G,on=!!(g&&g.hp&&view=='game');
+let FXN=0;
+function netPush(){if(!LB.players.length)return;const g=G,on=!!(g&&g.hp&&view=='game'),th=window.arenaTheme?arenaTheme():null,pl=LB.players.filter(x=>x.on);
 LB.players.forEach(p=>{if(!p.on)return;let m;const i=on?g.ps.findIndex(x=>x.lb===p):-1;
-if(i<0)m={t:'v',off:1};
+if(i<0)m={t:'v',off:1,i:pl.indexOf(p),ps:pl.map(x=>[x.e,x.n,S.cfg.l,0,0]),ml:S.cfg.l,gm:S.gm,th};
 else{const me=g.ps[i],mine=g.turn==i,ph=g.ph;
-m={t:'v',i,turn:g.turn,ph,gh:!!g.gh,pz:!!(g.paused||modal),n:g.n,msg:g.msg||'',tm:S.cfg.t,hg:S.gm=='hantu',ps:g.ps.map(x=>[x.e,x.n,x.l,x.sh,x.s])};
+m={t:'v',i,turn:g.turn,ph,gh:!!g.gh,pz:!!(g.paused||modal),n:g.n,msg:g.msg||'',tm:S.cfg.t,hg:S.gm=='hantu',ps:g.ps.map(x=>[x.e,x.n,x.l,x.sh,x.s]),ml:S.cfg.l,gm:S.gm,th};if(g.fx){if(!g.fx._id)g.fx._id=++FXN;m.fx={id:g.fx._id,list:[].concat(g.fx)}}
 if(ph=='end')m.rk=[...g.ps].sort((a,b)=>(b.l>0)-(a.l>0)||b.l-a.l||b.s-a.s).map(x=>[x.e,x.n,x.l,x.s,x===me?1:0]);
 if(mine){if(ph=='q'||ph=='rev'){const q=g.q;m.q={q:q.q,o:q.o,img:q.img&&q.img.length<350000?q.img:null};m.tl=g.tl;if(ph=='rev'){m.a=q.a;m.sel=g.sel}}
 if(ph=='act'){const cb=S.gm=='combo'&&me.st>=3;m.ac={cb,cm:S.gm=='combo',mg:me.st>=5,k3:S.gm=='kejutan',st:me.st||0,p:S.cfg.p*(cb?2:1)}}
@@ -349,26 +359,31 @@ function ctlMsg(m){if(!m||!m.t)return;C.lost=false;
 if(m.t=='joined'){C.me={e:m.e,n:m.n};C.tok=m.tok;try{localStorage.setItem('dktok-'+JOIN,m.tok)}catch(e){}if(C.st!='play')C.st='lobby'}
 else if(m.t=='err'){C.st='err';C.err=m.m;C.nore=true}
 else if(m.t=='kick'){C.st='kick'}
-else if(m.t=='v'){if(m.off){C.st='lobby';C.v=null;C.lk=''}else{const k=m.ph+':'+m.n+':'+m.turn;if(k!==C.lk){C.lk=k;C.lock=false;C.sel=null;if(m.turn==m.i&&['rdy','act'].includes(m.ph)){try{navigator.vibrate&&navigator.vibrate(80)}catch(e){}}}
-C.st='play';C.v=m;C.tm=m.tm||20;C.tlEnd=performance.now()+(m.tl||0)*1000}}
+else if(m.t=='v'){const k=m.off?'off':m.ph+':'+m.n+':'+m.turn;if(k!==C.lk){C.lk=k;C.lock=false;C.sel=null;if(!m.off&&m.turn==m.i&&['rdy','act'].includes(m.ph)){try{navigator.vibrate&&navigator.vibrate(80)}catch(e){}}}
+C.st='play';C.v=m;C.tm=m.tm||20;C.tlEnd=performance.now()+(m.tl||0)*1000;ctlG(m)}
 ctlR()}
+function ctlG(m){if(m.ml)S.cfg.l=m.ml;S.gm=m.gm;
+G={rem:1,hp:1,ps:m.ps.map(x=>({e:x[0],n:x[1],l:x[2],sh:x[3],s:x[4]})),turn:m.off?-1:m.turn,ph:m.off?'lobby':m.ph,n:m.n||0,iv:'r',msg:m.msg||'',fx:null};
+if(!m.off&&m.fx){if(m.fx.id!==C.fxId){C.fxId=m.fx.id;C.fxO=m.fx.list}G.fx=C.fxO}
+view='game';window.POV=m.i>=0?m.i:null;if(m.th&&window.setArenaTheme)setArenaTheme(m.th);window.sync3D&&sync3D()}
 function ctlSend(m){const v=C.v;if(!v||C.lock||v.pz||!C.conn)return;C.lock=true;try{C.conn.send(m)}catch(e){}const k=C.lk;setTimeout(()=>{if(C.lock&&C.lk===k){C.lock=false;ctlR()}},4000);ctlR()}
 const ctlAns=k=>{if(C.v&&C.v.ph=='q'){C.sel=k;ctlSend({t:'ans',k,n:C.v.n})}};
 function ctlTick(){if(C.st!='play'||!C.v||C.v.ph!='q'||C.v.pz)return;const left=Math.max(0,(C.tlEnd-performance.now())/1000),b=$('ctb'),t=$('ctt');if(b)b.style.width=Math.min(100,left/C.tm*100)+'%';if(t)t.textContent='⏱ '+Math.ceil(left)}
-function ctlHdr(v){const me=v.ps[v.i],dead=me[2]<=0;return `<div class=ch><b>${me[0]} ${esc(me[1])}</b><span>${dead?(v.hg?'👻':'💀'):hearts(me[2])}</span><span>${'🛡️'.repeat(me[3])}</span><span>⭐${me[4]}</span></div>`}
+function ctlHdr(v){const me=v.ps[v.i]||['🙂',C.name,0,0,0],dead=me[2]<=0&&!v.off;return `<div class=ch><b>${me[0]} ${esc(me[1])}</b><span>${dead?(v.hg?'👻':'💀'):hearts(me[2])}</span><span>${'🛡️'.repeat(me[3])}</span><span>⭐${me[4]}</span></div>`}
 function ctlBoard(v){return `<div class=cpl>${v.ps.map((x,j)=>`<div class="${j==v.i?'me':''}"><span>${x[0]} ${esc(x[1])}${j==v.turn?' 👈':''}</span><span>${x[2]<=0?(v.hg?'👻':'💀'):hearts(x[2])} ${'🛡️'.repeat(x[3])} ⭐${x[4]}</span></div>`).join('')}</div>`}
-function ctlPlay(v){const mine=v.turn==v.i,ph=v.ph,tp=v.ps[v.turn]||['','',0,0,0],dis=C.lock?' disabled':'';
-if(ph=='end')return `<div class=cw><h2>🏆 Hasil Akhir</h2>${v.rk.map((x,k)=>`<div class="rk ${k==0?'w':''}" style="${x[4]?'outline:3px solid #fde047':''}"><span>${['🥇','🥈','🥉'][k]||k+1}</span><span class=av>${x[0]}</span>${esc(x[1])}<em>${x[2]<=0?(v.hg?'👻':'💀'):hearts(x[2])} ⭐${x[3]}</em></div>`).join('')}<p>Menunggu guru memulai lagi…</p></div>`;
+function ctlPlay(v){if(v.off)return ctlHdr(v)+'<div class=cstage><div class=cw><div class=msg>✅ Terhubung!</div><p>Menunggu guru memulai permainan…</p></div></div>';
+const mine=v.turn==v.i,ph=v.ph,tp=v.ps[v.turn]||['','',0,0,0],dis=C.lock?' disabled':'';
+if(ph=='end')return ctlHdr(v)+`<div class=cstage><div class=cw><h2>🏆 Hasil Akhir</h2>${v.rk.map((x,k)=>`<div class="rk ${k==0?'w':''}" style="${x[4]?'outline:3px solid #fde047':''}"><span>${['🥇','🥈','🥉'][k]||k+1}</span><span class=av>${x[0]}</span>${esc(x[1])}<em>${x[2]<=0?(v.hg?'👻':'💀'):hearts(x[2])} ⭐${x[3]}</em></div>`).join('')}<p>Menunggu guru memulai lagi…</p></div></div>`;
 let b='';
 if(mine){
 if(ph=='rdy')b=`<div class=cw><div style="font-size:4.5rem">${v.gh?'👻':v.ps[v.i][0]}</div><h2>${v.gh?'Soal Kebangkitan!':'Giliranmu!'}</h2><p>${v.gh?'Jawab benar untuk hidup lagi dengan 1 ❤️':'Siap menjawab? Tekan tombol di bawah.'}</p><button class="btn g big"${dis} onclick="ctlSend({t:'go'})">▶️ Mulai</button></div>`;
 else if(ph=='q'||ph=='rev'){const q=v.q,rv=ph=='rev';b=`<div class=cq><div class=qb><i id=ctb style="width:${Math.min(100,Math.max(0,(C.tlEnd-performance.now())/1000)/C.tm*100)}%"></i></div><div class=qh><span id=ctt>${rv?'':'⏱ '+Math.max(0,Math.ceil((C.tlEnd-performance.now())/1000))}</span><span class=fb>${rv?(v.sel==v.a?'🎉 Benar!':v.sel==null||v.sel<0?'⏰ Waktu habis':'😢 Salah'):C.lock?'Jawaban terkirim…':'&nbsp;'}</span></div>${q.img?`<img class=qi src="${q.img}">`:''}<div class=qq>${esc(q.q)}</div><div class=co>${q.o.map((o,k)=>o?`<button class="qopt${rv?(k==v.a?' ok':k==v.sel?' no':' dim'):C.sel==k?' sel':''}" style="background:${COL[k]}" ${rv?'':`onpointerdown="ctlAns(${k})"`}><b>${L[k]}</b>${esc(o)}</button>`:'').join('')}</div></div>`}
-else if(ph=='act'){const a=v.ac;b=`<div class=cw><div class=msg>🎉 BENAR! +${a.p}⭐</div>${a.st>=2&&a.cm?`<p>🔥 COMBO ×${a.st}${a.cb?(a.mg?' — MEGA −3 ❤️':' — KRITIKAL −2 ❤️'):''}</p>`:''}<p>Pilih strategimu!</p><div class=co><button class="btn r"${dis} onclick="ctlSend({t:'act',k:'a'})">${a.cb?'🔥💥 '+(a.mg?'MEGA −3':'KRITIKAL −2'):'⚔️ SERANG'}</button><button class="btn g"${dis} onclick="ctlSend({t:'act',k:'d'})">🛡️ BERTAHAN</button>${a.k3?`<button class="btn o"${dis} onclick="ctlSend({t:'act',k:'k'})">🎁 KEJUTAN</button>`:''}</div></div>`}
-else if(ph=='tgt')b=`<div class=cw><div class=msg>⚔️ Pilih target!</div><div class=co>${(v.tg||[]).map(j=>{const x=v.ps[j];return `<button class=btn${dis} onclick="ctlSend({t:'tgt',i:${j}})">${x[0]} ${esc(x[1])} — ${hearts(x[2])} ${'🛡️'.repeat(x[3])}</button>`}).join('')}</div></div>`;
+else if(ph=='act'){const a=v.ac;b=`<div class=cw><div class=msg>🎉 BENAR! +${a.p}⭐</div>${a.st>=2&&a.cm?`<p>🔥 COMBO ×${a.st}${a.cb?(a.mg?' — MEGA −3 ❤️':' — KRITIKAL −2 ❤️'):''}</p>`:''}<p>Pilih strategimu!</p><div class="co co1"><button class="btn r"${dis} onclick="ctlSend({t:'act',k:'a'})">${a.cb?'🔥💥 '+(a.mg?'MEGA −3':'KRITIKAL −2'):'⚔️ SERANG'}</button><button class="btn g"${dis} onclick="ctlSend({t:'act',k:'d'})">🛡️ BERTAHAN</button>${a.k3?`<button class="btn o"${dis} onclick="ctlSend({t:'act',k:'k'})">🎁 KEJUTAN</button>`:''}</div></div>`}
+else if(ph=='tgt')b=`<div class=cw><div class=msg>⚔️ Pilih target!</div><div class="co co1">${(v.tg||[]).map(j=>{const x=v.ps[j];return `<button class=btn${dis} onclick="ctlSend({t:'tgt',i:${j}})">${x[0]} ${esc(x[1])} — ${hearts(x[2])} ${'🛡️'.repeat(x[3])}</button>`}).join('')}</div></div>`;
 else if(ph=='spin'){const s=v.sp||{};b=`<div class=cw><div class=msg>${s.pz?'🎁 Roda Kejutan!':'🎡 Roda Serangan!'}</div>${s.run?'<p>Roda berputar… lihat layar IFP 👀</p>':s.done?'<p>Lihat hasilnya di layar IFP ✨</p>':`<p>Tekan tombol untuk memutar roda!</p><button class="btn g big"${dis} onclick="ctlSend({t:'spin'})">🎡 SPIN</button>`}</div>`}
 else b=`<div class=cw><div class=msg>${esc(v.msg)}</div></div>`}
 else b=`<div class=cw><div style="font-size:3.6rem;animation:bob 1.5s infinite">${tp[0]}</div><h3>Giliran ${esc(tp[1])}</h3><p>${ph=='res'?esc(v.msg):'Perhatikan layar IFP 👀'}</p></div>`;
-return ctlHdr(v)+b+ctlBoard(v)}
+return ctlHdr(v)+'<div class=cstage>'+b+'</div>'}
 function ctlView(){const me=C.me||{e:'🙂',n:C.name};
 if(C.st=='name')return `<div class=cw><div style="font-size:3.6rem">⚔️🛡️</div><h2 style="margin:6px 0">Duel Kuis</h2><p>Kode ruangan: <b style="letter-spacing:.15em;font-size:1.4rem">${JOIN}</b></p><input id=cn maxlength=14 placeholder="Tulis namamu" value="${esc(C.name)}" style="width:100%;padding:14px;border-radius:14px;border:0;font:inherit;font-size:1.2rem;text-align:center"><button class="btn g big" style="margin-top:12px;width:100%" onclick=ctlJoin()>🚀 Gabung</button></div>`;
 if(C.st=='conn')return `<div class=cw><div style="font-size:3rem;animation:bob 1.2s infinite">📡</div><h3>Menghubungkan ke ruangan ${JOIN}…</h3></div>`;
@@ -377,7 +392,7 @@ if(C.st=='kick')return `<div class=cw><div style="font-size:3rem">👋</div><p>K
 if(C.st=='play'&&C.v)return ctlPlay(C.v);
 return `<div class=cw><div style="font-size:5rem;animation:bob 2s infinite">${me.e}</div><h2>${esc(me.n)}</h2><p>✅ Terhubung! Menunggu guru memulai permainan…</p></div>`}
 function ctlR(){let h=ctlView();if(C.lost)h+=`<div class=ov><div class=md style="text-align:center"><h3>📡 Terputus…</h3><p>Menyambung ulang otomatis</p></div></div>`;else if(C.st=='play'&&C.v&&C.v.pz&&C.v.ph!='end')h+=`<div class=ov><div class=md style="text-align:center"><h3>⏸️ Dijeda guru</h3></div></div>`;
-$('app').innerHTML=`<div class=cwrap>${h}</div>`}
+const p3=C.st=='play';document.body.classList.toggle('c3',p3);$('app').innerHTML=`<div class="cwrap${p3?' c3w':''}">${h}</div>`}
 
 /* ---------- BANK SOAL ---------- */
 function bank(){return `<div class=wrap><div class=top><button class=btn onclick="view='home';R()">⬅ Kembali</button><h2 style="margin:0">📚 Bank Soal (${S.qs.length})</h2></div>
@@ -420,7 +435,7 @@ window.startArena3D=function(){
 if(!window.THREE)return;const T=THREE,PI=Math.PI,TP=PI*2;let rd;
 const cv=document.createElement('canvas');cv.id='a3d';
 try{rd=new T.WebGLRenderer({canvas:cv,antialias:true,alpha:true})}catch(e){window.arena3dFail('WebGL tidak tersedia: '+e.message);return}
-document.body.prepend(cv);document.body.classList.add('g3');rd.setPixelRatio(Math.min(devicePixelRatio,2));
+document.body.prepend(cv);document.body.classList.add('g3');rd.setPixelRatio(Math.min(devicePixelRatio,JOIN?1.5:2));
 const sc=new T.Scene(),cam=new T.PerspectiveCamera(48,1,.1,120);
 const hl=new T.HemisphereLight(0xffffff,0x4c1d95,.95);sc.add(hl);const dl=new T.DirectionalLight(0xffffff,.9);dl.position.set(6,14,8);dl.castShadow=true;dl.shadow.mapSize.set(1024,1024);const sk=dl.shadow.camera;sk.left=sk.bottom=-14;sk.right=sk.top=14;sk.near=1;sk.far=45;sc.add(dl);rd.shadowMap.enabled=true;
 const mat=(c,o)=>new T.MeshStandardMaterial(Object.assign({color:c,roughness:.5},o||{}));
@@ -449,7 +464,7 @@ const PS={star:[0xffffff,.3],leaf:[0xa3e635,.4],dust:[0xfde68a,.22],snow:[0xffff
 let W=null,gems=[],DC=[],PT=null,TK='tech',SHK=0;
 try{TK=localStorage.getItem('duelkuis_tema')||'tech'}catch(e){}if(!TH[TK])TK='tech';
 function bgTex(sk){const c=document.createElement('canvas');c.width=2;c.height=256;const x=c.getContext('2d'),g=x.createLinearGradient(0,0,0,256);g.addColorStop(0,sk[0]);g.addColorStop(1,sk[1]);x.fillStyle=g;x.fillRect(0,0,2,256);return new T.CanvasTexture(c)}
-function setTheme(k){const t=TH[k]||TH.tech;TK=k;try{localStorage.setItem('duelkuis_tema',k)}catch(e){}
+function setTheme(k,ns){const t=TH[k]||TH.tech;TK=k;if(!ns)try{localStorage.setItem('duelkuis_tema',k)}catch(e){}
 if(W)sc.remove(W);W=new T.Group();sc.add(W);gems=[];DC=[];
 sc.background=bgTex(t.sky);sc.fog=new T.Fog(new T.Color(t.sky[1]).getHex(),32,85);hl.color.set(t.sky[1]);hl.groundColor.set(t.fl);dl.color.set(t.lt||0xffffff);
 const ar=new T.Mesh(new T.CylinderGeometry(8,8.6,.7,64),mat(t.fl));ar.position.y=-.35;ar.receiveShadow=true;W.add(ar);
@@ -472,11 +487,11 @@ function thUpd(dt){const t=TH[TK];gems.forEach((g,i)=>{g.rotation.y+=dt*2;g.posi
 if(PT&&t.par!='star'){const p=PT.geometry.attributes.position,a=p.array,v=t.par=='ember'?1.6:t.par=='snow'?-1.5:t.par=='leaf'?-.8:-.15;for(let i=0;i<a.length;i+=3){a[i+1]+=v*dt;a[i]+=Math.sin(t0*.8+i)*dt*.5;if(a[i+1]<-.7)a[i+1]=20;if(a[i+1]>20)a[i+1]=-.5}p.needsUpdate=true}
 DC.forEach(g=>{g.visible=Math.abs(((g.userData.a-ca+PI)%TP+TP)%TP-PI)>.55})}
 /* tombol pilih tema */
-(function(){const w=document.createElement('div');w.style.cssText='position:fixed;left:8px;top:50%;transform:translateY(-50%);z-index:90;font:600 14px Fredoka,sans-serif;display:flex;flex-direction:column;gap:6px;align-items:flex-start';
+(function(){const w=document.createElement('div');w.id='thw';w.style.cssText='position:fixed;left:8px;top:50%;transform:translateY(-50%);z-index:90;font:600 14px Fredoka,sans-serif;display:flex;flex-direction:column;gap:6px;align-items:flex-start';
 const b=document.createElement('button'),l=document.createElement('div');const bs='font:inherit;color:#fff;border:2px solid #fff6;border-radius:999px;padding:8px 14px;background:#1e1b4bcc;cursor:pointer;backdrop-filter:blur(6px)';b.style.cssText=bs;b.textContent='🎨 Tema Arena';l.style.cssText='display:none;flex-direction:column;gap:6px';
-Object.keys(TH).forEach(k=>{const x=document.createElement('button');x.style.cssText=bs;x.textContent=TH[k].n;x.onclick=()=>{setTheme(k);l.style.display='none'};l.appendChild(x)});
+Object.keys(TH).forEach(k=>{const x=document.createElement('button');x.style.cssText=bs;x.textContent=TH[k].n;x.onclick=()=>{setTheme(k);l.style.display='none';window.netPush&&netPush()};l.appendChild(x)});
 b.onclick=()=>{l.style.display=l.style.display=='flex'?'none':'flex'};w.append(b,l);document.body.appendChild(w)})();
-setTheme(TK);
+setTheme(TK);window.arenaTheme=()=>TK;window.setArenaTheme=k=>{if(TH[k]&&k!==TK)setTheme(k,1)};
 /* karakter 3D berdiri: tiap emoji hewan punya model sendiri */
 const SP={'🦁':{s:0xe0a030,f:0xf5d38a,mane:0x8b4513,ear:'r'},'🐯':{s:0xf59e0b,f:0xfde7b0,stripe:1,ear:'r'},'🐼':{s:0xffffff,f:0xffffff,d:0x222222,ear:'r',patch:1,limb:0x222222},
 '🦊':{s:0xf97316,f:0xffffff,ear:'p',tail:0xf97316,tip:0xffffff,snout:1},'🐸':{s:0x22c55e,f:0xbbf7d0,eyes:'top',wide:1},'🐵':{s:0x92400e,f:0xfcd9a8,ear:'r',tail:0x92400e,face:1},
@@ -548,14 +563,15 @@ const k=G.iv+':'+G.n;if(G.ph=='act'&&CK!==k){CK=k;const c=P[G.turn];if(c){c.jump
 if(END){let w=0;G.ps.forEach((x,i)=>{const y=G.ps[w];if(((x.l>0)-(y.l>0)||x.l-y.l||x.s-y.s)>0)w=i});P.W=w}}P.forEach(c=>c.pl=c.d.l)}
 let fr=1,sh0=0,frc=1,shc=0,LM=-1,RW=0,RH=0,ER=0;
 function meas(){const H=innerHeight||600,q=x=>document.querySelector(x);let top=0,bot=H;
-if(view=='game'&&G){const ev=q('.ev');if(ev){const a=q('.ev .logo'),b=q('.ev .rk.w');if(a)top=a.getBoundingClientRect().bottom;if(b)bot=b.getBoundingClientRect().top}
+if(JOIN){const a=q('.ch'),b=q('.cstage');if(a)top=a.getBoundingClientRect().bottom;bot=b?b.getBoundingClientRect().top:H*.6}
+else if(view=='game'&&G){const ev=q('.ev');if(ev){const a=q('.ev .logo'),b=q('.ev .rk.w');if(a)top=a.getBoundingClientRect().bottom;if(b)bot=b.getBoundingClientRect().top}
 else{const a=q('.gv .top'),b=q('.gv .stage');if(a)top=a.getBoundingClientRect().bottom;if(b){const r=b.getBoundingClientRect();bot=r.top+r.height*.45}}}
 if(bot-top<H*.28)bot=top+H*.28;fr=Math.min(1,(bot-top)/H);sh0=H/2-(top+bot)/2}
 function rs(){const w=innerWidth||800,h=innerHeight||600;RW=w;RH=h;rd.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}addEventListener('resize',rs);rs();
 /* loop animasi */
-const clk=new T.Clock(),LK=new T.Vector3();let t0=0,ca=0,cy=.8,cd=15,ct=0,cx=0,ua=0,uh=0,uz=1;
+const clk=new T.Clock(),LK=new T.Vector3();let t0=0,ca=0,cy=.8,cd=15,ct=0,cx=0,ua=0,uh=0,uz=1,PCX=0,PCY=3,PCZ=8,PLX=0,PLZ=0;
 /* kontrol kamera: geser = putar, roda/cubit = zoom, klik dua kali = reset */
-const NO='button,a,input,select,textarea,.opt,.pc,.ov,.btn,canvas,#cwg,#thl',PT2=new Map(),cl=(v,a,b)=>Math.max(a,Math.min(b,v));
+const NO='button,a,input,select,textarea,.opt,.pc,.ov,.btn,canvas,#cwg,#thl,.cstage,.ch',PT2=new Map(),cl=(v,a,b)=>Math.max(a,Math.min(b,v));
 addEventListener('pointerdown',e=>{if(e.target.closest&&e.target.closest(NO))return;PT2.set(e.pointerId,[e.clientX,e.clientY])});
 addEventListener('pointermove',e=>{const p=PT2.get(e.pointerId);if(!p)return;
 if(PT2.size==1){ua-=(e.clientX-p[0])*.006;uh=cl(uh+(e.clientY-p[1])*.003,-.25,.7)}
@@ -624,8 +640,11 @@ const asp=Math.max(1,Math.sqrt(1.2/cam.aspect));let tr=Math.max(7,Math.max(14,11
 if(END&&P[P.W]){tr*=.8;fx=P[P.W].b.x*.5}
 ca+=(Math.sin(t0*.25)*.1+ua-ca)*Math.min(1,dt*3);const th=tr*(.38+uh);
 cd+=(tr-cd)*Math.min(1,dt*2);cy+=(th-cy)*Math.min(1,dt*2);ct+=(tl-ct)*Math.min(1,dt*2);cx+=(fx-cx)*Math.min(1,dt*2);
-cam.position.set(Math.sin(ca)*cd+cx,cy,Math.cos(ca)*cd);SHK=Math.max(0,SHK-dt*2.5);cam.position.x+=(Math.random()-.5)*SHK;cam.position.y+=(Math.random()-.5)*SHK*.6;
-cam.lookAt(LK.set(cx,ct,0));cam.setViewOffset(RW,RH,0,shc,RW,RH);
+const pv=window.POV!=null&&P[window.POV];
+if(pv){const yw=pv.a+ua,fx2=Math.sin(yw),fz2=Math.cos(yw),a2=Math.max(1,.8/cam.aspect),bk=(END?9:5.8)*a2*uz,hh=(3.1+(a2-1)*2.2)*(1+uh),kk=Math.min(1,dt*3);
+PCX+=(pv.b.x-fx2*bk-PCX)*kk;PCY+=(hh-PCY)*kk;PCZ+=(pv.b.z-fz2*bk-PCZ)*kk;PLX+=(pv.b.x+fx2*7-PLX)*kk;PLZ+=(pv.b.z+fz2*7-PLZ)*kk;cam.position.set(PCX,PCY,PCZ)}
+else cam.position.set(Math.sin(ca)*cd+cx,cy,Math.cos(ca)*cd);SHK=Math.max(0,SHK-dt*2.5);cam.position.x+=(Math.random()-.5)*SHK;cam.position.y+=(Math.random()-.5)*SHK*.6;
+cam.lookAt(pv?LK.set(PLX,1.1,PLZ):LK.set(cx,ct,0));cam.setViewOffset(RW,RH,0,shc,RW,RH);
 rd.render(sc,cam)}
 (function loop(){requestAnimationFrame(loop);try{frame()}catch(e){if(!ER){ER=1;window.arena3dFail('error: '+e.message);console.error(e)}}})();
 sync3D();
@@ -636,6 +655,6 @@ window.arena3dFail=function(m){var d=document.createElement('div');d.style.cssTe
 (function(){var u=['https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js','https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js','https://unpkg.com/three@0.128.0/build/three.min.js'];
 function go(){try{startArena3D()}catch(e){arena3dFail('error: '+e.message);console.error(e)}}
 function ld(i){if(window.THREE)return go();if(i>=u.length)return arena3dFail('Three.js gagal dimuat, cek koneksi internet');var s=document.createElement('script');s.src=u[i];s.onload=go;s.onerror=function(){ld(i+1)};document.head.appendChild(s)}
-if(!JOIN)window.addEventListener('load',function(){ld(0)})})();
+window.addEventListener('load',function(){ld(0)})})();
 </script>
 </body></html>
